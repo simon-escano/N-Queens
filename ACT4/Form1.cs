@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -21,11 +21,7 @@ namespace ACT4
         int moveCounter;
         double temperature = 1000;
         double coolingFactor = 0.95;
-
-        Point lastMove1 = new Point(-1, -1);
-        Point lastMove2 = new Point(-1, -1);
-        int nonImprovingMoveCount = 0;
-        const int maxNonImprovingMoves = 10;
+        bool isStuck = false;
 
         int[,] hTable;
         ArrayList bMoves;
@@ -207,27 +203,6 @@ namespace ACT4
             moveCounter++;
             temperature *= coolingFactor;
 
-            lastMove2 = lastMove1;
-            lastMove1 = move;
-
-            if (getAttackingPairs(currentState) >= 0)
-            {
-                nonImprovingMoveCount++;
-                if (nonImprovingMoveCount >= maxNonImprovingMoves)
-                {
-                    if (bMoves.Count > 0)
-                    {
-                        Random r = new Random();
-                        move = (Point)bMoves[r.Next(bMoves.Count)];
-                    }
-                    nonImprovingMoveCount = 0;
-                }
-            }
-            else
-            {
-                nonImprovingMoveCount = 0;
-            }
-
             chosenMove = null;
             updateUI();
         }
@@ -245,6 +220,7 @@ namespace ACT4
 
         private void button3_Click(object sender, EventArgs e)
         {
+            isStuck = false;
             startState = randomSixState();
             currentState = new SixState(startState);
             moveCounter = 0;
@@ -255,9 +231,27 @@ namespace ACT4
 
         private void button2_Click(object sender, EventArgs e)
         {
+            if (isStuck)
+            {
+
+                label4.Text = "PLEASE randomize queens";
+                return;
+            }
+            int counter = 0;
+
             while (getAttackingPairs(currentState) > 0)
             {
                 executeMove((Point)chosenMove);
+
+                counter++;
+
+                if (counter >= 1000)
+                {
+                    isStuck = true;
+                    label2.Text = "Stuck! local maxima is H=" + getAttackingPairs(currentState) + "";
+                    label4.Text = "Please randomize queens";
+                    return;
+                }
             }
         }
 
